@@ -59,6 +59,14 @@ Player[] players;
                 second(turn+1);
             }
         });
+        fold.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                players[turn].setFolded(true);
+                updateStatus();
+                second(turn+1);
+            }
+        });
         reiz.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -118,8 +126,13 @@ Player[] players;
         String status = "Счет: \n";
         for(int i=0; i<playersCount; i++){
             status += players[i].name + " имеет " + String.valueOf(players[i].cash)+" фишек";
-            if(players[i].getLastBet() > 0){
-                status += "  Ставка: " + String.valueOf(players[i].getLastBet());
+            if(!players[i].isFolded()){
+                if(players[i].getLastBet() > 0){
+                    status += "  Ставка: " + String.valueOf(players[i].getLastBet());
+                }
+            }
+            else {
+                status += "  ПАСС";
             }
             status+="\n";
         }
@@ -148,6 +161,10 @@ Player[] players;
     }
 
     protected void first(){
+        for(int i=0; i<playersCount; i++){
+            players[i].setFolded(false);
+            players[i].setLastBet(0);
+        }
         button.setText("ИНФО");
         hideButtons();
         AlertDialog.Builder a_builder = new AlertDialog.Builder(game.this);
@@ -193,58 +210,99 @@ Player[] players;
         else return false;
     }
     protected void second(int player){
-        if(player < playersCount) {
-            turn = player;
-            check--;
-            int cal = minLastBet()-players[turn].getLastBet();
-            if(cal>0)call.setText("КОЛЛ("+String.valueOf(minLastBet()-players[turn].getLastBet())+")");
-            else call.setText("ЧЕК");
-            reiz.setText("РЕЙЗ("+String.valueOf(seekBar.getProgress()+minLastBet()+1-players[turn].getLastBet())+")");
-            statusView.setText(players[player].name + " ставит");
-            seekBar.setMax(players[player].cash);
+        if(!allPassed()){
+            if(player < playersCount) {
+                turn = player;
+                check--;
+                int cal = minLastBet()-players[turn].getLastBet();
+                if(cal>0)call.setText("КОЛЛ("+String.valueOf(minLastBet()-players[turn].getLastBet())+")");
+                else call.setText("ЧЕК");
+                reiz.setText("РЕЙЗ("+String.valueOf(seekBar.getProgress()+minLastBet()+1-players[turn].getLastBet())+")");
+                statusView.setText(players[player].name + " ставит");
+                seekBar.setMax(players[player].cash);
+            }
+            else {
+                if(betEq() && check<=0) {
+                    clearBets();
+                    updateStatus();
+                    String mess1 = "Следующий этап";
+                    String mess2 = "";
+                    if(stage==0){
+                        mess2 = "Выложите на стол 3 карты";
+                    }
+                    else if(stage==1){
+                        mess2 = "Выложите на стол 4-ю карту";
+                    }
+                    else if(stage==2){
+                        mess2 = "Выложите на стол 5-ю карту";
+                    }
+                    else if(stage==3){
+                        mess2 = "Партия закончена!";
+                    }
+                    AlertDialog.Builder a_builder = new AlertDialog.Builder(game.this);
+                    a_builder.setMessage(mess2).setCancelable(false)
+                            .setPositiveButton("Продолжить", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    if(stage < 3){
+                                        hideButtons();
+                                        stage++;
+                                        second(stage%playersCount);
+                                        updateStatus();
+                                        showButtons();
+                                    }
+                                    else {
+                                        gameover=true;
+                                        gameover();
+                                    }
+                                }
+                            });
+                    AlertDialog alertDialog = a_builder.create();
+                    alertDialog.setTitle(mess1);
+                    alertDialog.show();
+                }
+                else second(0);
+            }
         }
         else {
-            if(betEq() && check<=0) {
-                clearBets();
-                updateStatus();
-                String mess1 = "Следующий этап";
-                String mess2 = "";
-                if(stage==0){
-                    mess2 = "Выложите на стол 3 карты";
-                }
-                else if(stage==1){
-                    mess2 = "Выложите на стол 4-ю карту";
-                }
-                else if(stage==2){
-                    mess2 = "Выложите на стол 5-ю карту";
-                }
-                else if(stage==3){
-                    mess2 = "Партия закончена!";
-                }
-                AlertDialog.Builder a_builder = new AlertDialog.Builder(game.this);
-                a_builder.setMessage(mess2).setCancelable(false)
-                        .setPositiveButton("Продолжить", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                if(stage < 3){
-                                    hideButtons();
-                                    stage++;
-                                    second(stage%playersCount);
-                                    updateStatus();
-                                    showButtons();
-                                }
-                                else {
-                                    gameover=true;
-                                    gameover();
-                                }
-                            }
-                        });
-                AlertDialog alertDialog = a_builder.create();
-                alertDialog.setTitle(mess1);
-                alertDialog.show();
-            }
-            else second(0);
+            final int winner = whoNotPassed();
+            hideButtons();
+            AlertDialog.Builder a_builder = new AlertDialog.Builder(game.this);
+            a_builder.setMessage("Партия закончена!").setCancelable(false)
+                    .setPositiveButton("Продолжить", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            players[winner].cash += bank;
+                            bank = 0;
+                            turn = 0;
+                            stage = 0;
+                            first();
+                        }
+                    });
+            AlertDialog alertDialog = a_builder.create();
+            alertDialog.setTitle("Победитель: " + players[winner].name);
+            alertDialog.show();
         }
+    }
+    protected boolean allPassed(){
+        int gamers = 0;
+        for(int i=0; i<playersCount; i++){
+            if (!players[i].isFolded()){
+                gamers++;
+            }
+        }
+        if (gamers>1){
+            return false;
+        }
+        return true;
+    }
+    protected int whoNotPassed(){
+        for(int i=0; i<playersCount; i++){
+            if (!players[i].isFolded()){
+                return i;
+            }
+        }
+        return 0;
     }
     protected void gameover(){
         statusView.setText("Укажите победителя");
