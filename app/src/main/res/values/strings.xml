@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Poker Assistant</string>
+    <string name="textview">TextView</string>
+    <string name="fold">Фолд</string>
+    <string name="call">КОЛЛ</string>
+    <string name="reiz">РЕЙЗ</string>
+    <string name="bank">TextView</string>
+    <string name="info">инфо</string>
 </resources>

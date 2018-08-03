@@ -198,12 +198,14 @@ Player[] players;
     protected boolean betEq(){
         int minB = 100000;
         int maxB = 0;
-        for(int i=0; i<playersCount; i++){
-            if(players[i].getLastBet()<minB){
-                minB = players[i].getLastBet();
-            }
-            if(players[i].getLastBet()>maxB){
-                maxB = players[i].getLastBet();
+        for(int i=0; i<playersCount; i++) {
+            if (!players[i].isFolded()) {
+                if (players[i].getLastBet() < minB) {
+                    minB = players[i].getLastBet();
+                }
+                if (players[i].getLastBet() > maxB) {
+                    maxB = players[i].getLastBet();
+                }
             }
         }
         if(minB==maxB) return true;
@@ -212,14 +214,20 @@ Player[] players;
     protected void second(int player){
         if(!allPassed()){
             if(player < playersCount) {
-                turn = player;
-                check--;
-                int cal = minLastBet()-players[turn].getLastBet();
-                if(cal>0)call.setText("КОЛЛ("+String.valueOf(minLastBet()-players[turn].getLastBet())+")");
-                else call.setText("ЧЕК");
-                reiz.setText("РЕЙЗ("+String.valueOf(seekBar.getProgress()+minLastBet()+1-players[turn].getLastBet())+")");
-                statusView.setText(players[player].name + " ставит");
-                seekBar.setMax(players[player].cash);
+                if (players[player].isFolded()){
+                    second(player+1);
+                }
+                else {
+                    turn = player;
+                    check--;
+                    int cal = minLastBet() - players[turn].getLastBet();
+                    if (cal > 0)
+                        call.setText("КОЛЛ(" + String.valueOf(minLastBet() - players[turn].getLastBet()) + ")");
+                    else call.setText("ЧЕК");
+                    reiz.setText("РЕЙЗ(" + String.valueOf(seekBar.getProgress() + minLastBet() + 1 - players[turn].getLastBet()) + ")");
+                    statusView.setText(players[player].name + " ставит");
+                    seekBar.setMax(players[player].cash);
+                }
             }
             else {
                 if(betEq() && check<=0) {
