@@ -168,10 +168,14 @@ Player[] players;
         button.setText("ИНФО");
         hideButtons();
         AlertDialog.Builder a_builder = new AlertDialog.Builder(game.this);
-        a_builder.setMessage("Раздайте по две карты каждому игроку").setCancelable(false)
+        a_builder.setMessage("Раздайте по две карты каждому игроку. Со всех игроков удержана начальная ставка.").setCancelable(false)
                 .setPositiveButton("Продолжить", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        for(int i=0;i<playersCount;i++){
+                            players[i].minusCash(10);
+                        }
+                        bank+=playersCount*10;
                         second(0);
                         updateStatus();
                         showButtons();
