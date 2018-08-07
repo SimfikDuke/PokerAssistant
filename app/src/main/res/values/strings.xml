@@ -34,4 +34,5 @@
     <string name="_9">Игрок 9</string>
     <string name="_10">Игрок10</string>
     <string name="selectedWinner">Готово</string>
+    <string name="start">Начать</string>
 </resources>

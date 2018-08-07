@@ -42,19 +42,23 @@ public class winner extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                for(int i = 0; i<playersCount; i++){
-                    if (winnersCheck[i].isChecked()){
-                        winners[i] = true;
-                    }
-                    else {
-                        winners[i] = false;
-                    }
-                }
-                Intent winnerIntent = new Intent();
-                winnerIntent.putExtra("Winners",winners);
-                setResult(RESULT_OK,winnerIntent);
-                finish();
+                onBackPressed();
             }
         });
     }
+    @Override public void onBackPressed(){
+        for(int i = 0; i<playersCount; i++){
+            if (winnersCheck[i].isChecked()){
+                winners[i] = true;
+            }
+            else {
+                winners[i] = false;
+            }
+        }
+        Intent winnerIntent = new Intent();
+        winnerIntent.putExtra("Winners",winners);
+        setResult(RESULT_OK,winnerIntent);
+        finish();
+    }
+
 }
