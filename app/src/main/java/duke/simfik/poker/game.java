@@ -265,7 +265,8 @@ Player[] players;
                                     }
                                     else {
                                         gameover=true;
-                                        gameover();
+                                        //gameover(); // last form
+                                        gameoverAction();
                                     }
                                 }
                             });
@@ -323,5 +324,42 @@ Player[] players;
         reiz.setVisibility(View.INVISIBLE);
         seekBar.setMax(playersCount-1);
         button.setText("ВЫБРАТЬ");
+    }
+    protected void gameoverAction(){
+        Intent chooseWinners = new Intent(game.this, winner.class);
+        chooseWinners.putExtra("playersCount", playersCount);
+        boolean[] foldedPlayers = new boolean[playersCount];
+        for (int i=0; i < playersCount; i++)
+            if(players[i].isFolded())
+                foldedPlayers[i]=true;
+        chooseWinners.putExtra("foldedPlayers", foldedPlayers);
+        startActivityForResult(chooseWinners,0);
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 0) {
+            if (resultCode == RESULT_OK) {
+                boolean[] winners = data.getBooleanArrayExtra("Winners");
+                int winnersCount = 0;
+                for (int i=0; i < playersCount; i++){
+                    if (winners[i]){
+                        winnersCount++;
+                    }
+                }
+                for (int i=0; i < playersCount; i++){
+                    if (winners[i]){
+                        players[i].cash += bank/winnersCount;
+                    }
+                }
+                bank = 0;
+                turn = 0;
+                stage = 0;
+                gameover = false;
+                first();
+            }else {
+
+            }
+        }
     }
 }
